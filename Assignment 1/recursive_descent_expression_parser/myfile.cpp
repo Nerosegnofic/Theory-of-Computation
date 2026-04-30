@@ -337,6 +337,163 @@ struct Parser
 // Run a single test case: print input, then print parse tree.
 // =============================================================================
 
+void printExpression(TreeNode* node)
+{
+    if (!node) return;
+
+    switch (node->kind)
+    {
+        case VAR_NODE:
+            printf("%c", node->var_name);
+            break;
+
+        case IDENTITY_NODE:
+            printf("e");
+            break;
+
+        case INVERSE_NODE:
+            // print child then ^-1
+            if (node->child[0]->kind == PRODUCT_NODE)
+            {
+                printf("(");
+                printExpression(node->child[0]);
+                printf(")");
+            }
+            else
+            {
+                printExpression(node->child[0]);
+            }
+            printf("^-1");
+            break;
+
+        case PRODUCT_NODE:
+            // left . right
+            if (node->child[0]->kind == PRODUCT_NODE)
+            {
+                printf("(");
+                printExpression(node->child[0]);
+                printf(")");
+            }
+            else
+            {
+                printExpression(node->child[0]);
+            }
+
+            printf(".");
+
+            if (node->child[1]->kind == PRODUCT_NODE)
+            {
+                printf("(");
+                printExpression(node->child[1]);
+                printf(")");
+            }
+            else
+            {
+                printExpression(node->child[1]);
+            }
+            break;
+    }
+}
+
+TreeNode* simplify(TreeNode* node)
+{
+    if (!node) return node;
+
+    // simplify children first (post-order)
+    for (int i = 0; i < MAX_CHILDREN; i++)
+        node->child[i] = simplify(node->child[i]);
+
+    // ---- RULES ----
+
+    // x^-1^-1 → x
+    if (node->kind == INVERSE_NODE &&
+        node->child[0]->kind == INVERSE_NODE)
+    {
+        TreeNode* result = node->child[0]->child[0];
+        node->child[0]->child[0] = nullptr;
+        delete node->child[0];
+        delete node;
+        return result;
+    }
+
+    // e^-1 → e
+    if (node->kind == INVERSE_NODE &&
+        node->child[0]->kind == IDENTITY_NODE)
+    {
+        delete node;
+        return new TreeNode(IDENTITY_NODE);
+    }
+
+    // (x.y)^-1 → y^-1.x^-1
+    if (node->kind == INVERSE_NODE &&
+        node->child[0]->kind == PRODUCT_NODE)
+    {
+        TreeNode* A = node->child[0]->child[0];
+        TreeNode* B = node->child[0]->child[1];
+
+        TreeNode* leftInv = new TreeNode(INVERSE_NODE);
+        leftInv->child[0] = B;
+
+        TreeNode* rightInv = new TreeNode(INVERSE_NODE);
+        rightInv->child[0] = A;
+
+        TreeNode* newProd = new TreeNode(PRODUCT_NODE);
+        newProd->child[0] = leftInv;
+        newProd->child[1] = rightInv;
+
+        delete node->child[0];
+        delete node;
+
+        return simplify(newProd);
+    }
+
+    // e.x → x
+    if (node->kind == PRODUCT_NODE &&
+        node->child[0]->kind == IDENTITY_NODE)
+    {
+        TreeNode* result = node->child[1];
+        node->child[1] = nullptr;
+        delete node;
+        return result;
+    }
+
+    // x.e → x
+    if (node->kind == PRODUCT_NODE &&
+        node->child[1]->kind == IDENTITY_NODE)
+    {
+        TreeNode* result = node->child[0];
+        node->child[0] = nullptr;
+        delete node;
+        return result;
+    }
+
+    // x.x^-1 → e
+    if (node->kind == PRODUCT_NODE &&
+        node->child[1]->kind == INVERSE_NODE &&
+        node->child[1]->child[0]->kind == VAR_NODE &&
+        node->child[0]->kind == VAR_NODE &&
+        node->child[0]->var_name ==
+        node->child[1]->child[0]->var_name)
+    {
+        delete node;
+        return new TreeNode(IDENTITY_NODE);
+    }
+
+    // x^-1.x → e
+    if (node->kind == PRODUCT_NODE &&
+        node->child[0]->kind == INVERSE_NODE &&
+        node->child[0]->child[0]->kind == VAR_NODE &&
+        node->child[1]->kind == VAR_NODE &&
+        node->child[1]->var_name ==
+        node->child[0]->child[0]->var_name)
+    {
+        delete node;
+        return new TreeNode(IDENTITY_NODE);
+    }
+
+    return node;
+}
+
 void runTest(int num, const char* input)
 {
     printf("--------------------------------------------------\n");
@@ -346,6 +503,11 @@ void runTest(int num, const char* input)
     Parser    p(input);
     TreeNode* tree = p.parse();
     printTree(tree, 0);
+    printf("\n");
+
+    tree = simplify(tree);
+    printf("Simplified Expression: ");
+    printExpression(tree);
     printf("\n");
     destroyTree(tree);
 }
@@ -357,6 +519,9 @@ void runTest(int num, const char* input)
 
 int main()
 {
+
+    runTest( 0, "((x.y^-1).z^-1^-1^-1^-1)^-1");
+    runTest( 0, "((x.y^-1).z)^-1");
     // --- Basic identity rules (e.x -> x, x.e -> x) ---
     runTest( 1, "e.x");
     runTest( 2, "x.e");
