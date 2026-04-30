@@ -4,10 +4,9 @@
  * Ahmed Alaaeldin   - 20220028
  * George Raafat     - 20220097
  * AbdulRahman Tarek - 20221096
- * =============================================================================
+ *
  * Extended BNF Grammar for Group Expressions
  * (James Hein, "Theory of Computation: An Introduction", Pages 459-460)
- * =============================================================================
  *
  *   expr -> term { '.' term }
  *   term -> atom { '^-1' }
@@ -16,28 +15,28 @@
  * Terminals:
  *   VAR   = any lowercase letter 'a'..'z' except 'e'
  *   'e'   = identity element of the group
- *   '.'   = group product operator (left-associative, binary)
- *   '^-1' = group inverse operator (postfix; left-chained when repeated)
+ *   '.'   = group product operator
+ *   '^-1' = group inverse operator (postfix)
  *   '('   = left parenthesis
  *   ')'   = right parenthesis
  *
  * Associativity:
- *   '.'   is left-associative:  x.y.z  parses as  (x.y).z
- *   '^-1' is left-chained:      x^-1^-1  parses as  (x^-1)^-1
+ *   '.'   is left-associative:  x.y.z    parses as (x.y).z
+ *   '^-1' is left-chained:      x^-1^-1  parses as (x^-1)^-1
  *
- * Reduction rules captured from pages 459-460:
- *   e.x         ->  x              (left identity)
- *   x.e         ->  x              (right identity)
- *   x^-1.x      ->  e              (left inverse)
- *   x.x^-1      ->  e              (right inverse)
- *   e^-1        ->  e              (inverse of identity)
- *   x^-1^-1     ->  x              (involution / double inverse)
- *   y^-1.(y.z)  ->  z              (left cancellation)
- *   y.(y^-1.z)  ->  z              (right cancellation)
- *   (x.y).z     ->  x.(y.z)        (associativity)
- *   (x.y)^-1    ->  y^-1.x^-1     (inverse of product)
+ * Reduction rules from pages 459-460:
+ *   e.x         ->  x
+ *   x.e         ->  x
+ *   x^-1.x      ->  e
+ *   x.x^-1      ->  e
+ *   e^-1        ->  e
+ *   x^-1^-1     ->  x
+ *   y^-1.(y.z)  ->  z
+ *   y.(y^-1.z)  ->  z
+ *   (x.y).z     ->  x.(y.z)
+ *   (x.y)^-1    ->  y^-1.x^-1
  *
- * Example (left-hand side of last equation, page 460):
+ * Example:
  *   Input:  ((x.y^-1).z)^-1
  *   Output:
  *     inverse
@@ -47,8 +46,7 @@
  *           |--inverse
  *              |--y
  *        |--z
- * =============================================================================
-*/
+ */
 
 #include <cstdio>
 #include <cstdlib>
@@ -65,24 +63,24 @@ enum TokenType
     VAR,        // lowercase letter other than 'e'
     IDENTITY,   // the letter 'e'
     DOT,        // '.'
-    INV_OP,     // '^-1'  (entire postfix inverse, read as 3 characters)
+    INV_OP,     // '^-1' consumed as a single 3-character unit
     LPAREN,     // '('
     RPAREN,     // ')'
-    ENDFILE,    // end of the input string
+    ENDFILE,    // end of input
     TOK_ERROR   // unrecognized character
 };
 
 struct Token
 {
     TokenType type;
-    char      var_name;    // valid only when type == VAR
+    char      var_name;    // meaningful only when type == VAR
 
     Token() : type(TOK_ERROR), var_name('\0') {}
 };
 
 // =============================================================================
-// Scanner (Lexer)
-// Reads characters from a null-terminated C string, produces tokens.
+// Scanner
+// Walks a null-terminated C string one logical token at a time.
 // =============================================================================
 
 struct Scanner
@@ -93,7 +91,7 @@ struct Scanner
 
     Scanner(const char* s) : input(s), pos(0), length((int)strlen(s)) {}
 
-    // Return character at pos+offset without advancing; '\0' past end.
+    // Look ahead without consuming; returns '\0' past the end.
     char peek(int offset = 0) const
     {
         int i = pos + offset;
@@ -102,7 +100,6 @@ struct Scanner
 
     void advance(int n = 1) { pos += n; }
 
-    // Skip spaces and tabs only (newlines are not expected in single-line input).
     void skipWhitespace()
     {
         while (pos < length && (input[pos] == ' ' || input[pos] == '\t'))
@@ -122,7 +119,7 @@ struct Scanner
 
         char c = peek();
 
-        // Identity element 'e' must be checked before general VAR.
+        // 'e' must be checked before the general VAR case.
         if (c == 'e')
         {
             t.type = IDENTITY;
@@ -142,7 +139,7 @@ struct Scanner
         if (c == '(') { t.type = LPAREN; advance();    return t; }
         if (c == ')') { t.type = RPAREN; advance();    return t; }
 
-        // Inverse operator: must be exactly '^', '-', '1'.
+        // Inverse operator is always exactly three characters: ^, -, 1.
         if (c == '^' && peek(1) == '-' && peek(2) == '1')
         {
             t.type = INV_OP;
@@ -150,7 +147,6 @@ struct Scanner
             return t;
         }
 
-        // Anything else is an error token; consume one character.
         t.type = TOK_ERROR;
         advance();
         return t;
@@ -163,10 +159,10 @@ struct Scanner
 
 enum NodeKind
 {
-    PRODUCT_NODE,    // binary: child[0] '.' child[1]
-    INVERSE_NODE,    // unary:  child[0] '^-1'
-    IDENTITY_NODE,   // leaf:   'e'
-    VAR_NODE         // leaf:   single variable letter
+    PRODUCT_NODE,    // binary:  child[0] '.' child[1]
+    INVERSE_NODE,    // unary:   child[0] '^-1'
+    IDENTITY_NODE,   // leaf:    'e'
+    VAR_NODE         // leaf:    single variable letter
 };
 
 #define MAX_CHILDREN 2
@@ -174,7 +170,7 @@ enum NodeKind
 struct TreeNode
 {
     NodeKind  kind;
-    char      var_name;              // valid only when kind == VAR_NODE
+    char      var_name;              // meaningful only when kind == VAR_NODE
     TreeNode* child[MAX_CHILDREN];
 
     explicit TreeNode(NodeKind k) : kind(k), var_name('\0')
@@ -183,14 +179,21 @@ struct TreeNode
     }
 };
 
+// Declared here because simplify() calls it when discarding subtrees.
+void destroyTree(TreeNode* node)
+{
+    if (!node) return;
+    for (int i = 0; i < MAX_CHILDREN; ++i) destroyTree(node->child[i]);
+    delete node;
+}
+
 // =============================================================================
-// Print Parse Tree
+// printTree
 //
-// Format (depth 0 has no prefix; each deeper level adds "   " then "|--"):
-//   depth 0:  label
-//   depth 1:  |--label
-//   depth 2:     |--label          (3 spaces + "|--")
-//   depth 3:        |--label       (6 spaces + "|--")
+// Indentation scheme:
+//   depth 0  ->  no indent, no prefix
+//   depth 1  ->  |--
+//   depth 2  ->     |--   (3 spaces per level above 1)
 // =============================================================================
 
 void printTree(TreeNode* node, int depth)
@@ -202,10 +205,10 @@ void printTree(TreeNode* node, int depth)
 
     switch (node->kind)
     {
-        case PRODUCT_NODE:  printf("product\n");          break;
-        case INVERSE_NODE:  printf("inverse\n");          break;
-        case IDENTITY_NODE: printf("e\n");                break;
-        case VAR_NODE:      printf("%c\n", node->var_name); break;
+        case PRODUCT_NODE:  printf("product\n");             break;
+        case INVERSE_NODE:  printf("inverse\n");             break;
+        case IDENTITY_NODE: printf("e\n");                   break;
+        case VAR_NODE:      printf("%c\n", node->var_name);  break;
     }
 
     for (int i = 0; i < MAX_CHILDREN; ++i)
@@ -213,32 +216,20 @@ void printTree(TreeNode* node, int depth)
 }
 
 // =============================================================================
-// Destroy Parse Tree (post-order)
-// =============================================================================
-
-void destroyTree(TreeNode* node)
-{
-    if (!node) return;
-    for (int i = 0; i < MAX_CHILDREN; ++i) destroyTree(node->child[i]);
-    delete node;
-}
-
-// =============================================================================
 // Recursive Descent Parser
-// Implements the EBNF grammar defined at the top of this file.
+// Each grammar rule maps directly to one member function.
 // =============================================================================
 
 struct Parser
 {
     Scanner scanner;
-    Token   current;        // lookahead token
+    Token   current;
 
     explicit Parser(const char* input) : scanner(input)
     {
-        current = scanner.nextToken();    // prime the lookahead
+        current = scanner.nextToken();
     }
 
-    // Consume the current token if it matches 'expected'; abort on mismatch.
     void match(TokenType expected)
     {
         if (current.type != expected)
@@ -249,9 +240,9 @@ struct Parser
         current = scanner.nextToken();
     }
 
-    // -------------------------------------------------------------------------
-    // expr -> term { '.' term }         (left-associative product)
-    // -------------------------------------------------------------------------
+    // expr -> term { '.' term }
+    // Left-associativity is achieved by accumulating into a left-leaning tree
+    // inside the while loop rather than using right recursion.
     TreeNode* expr()
     {
         TreeNode* tree = term();
@@ -269,9 +260,9 @@ struct Parser
         return tree;
     }
 
-    // -------------------------------------------------------------------------
-    // term -> atom { '^-1' }            (postfix inverse, left-chained)
-    // -------------------------------------------------------------------------
+    // term -> atom { '^-1' }
+    // Repeated inverses wrap the previous result, giving left-chaining:
+    // x^-1^-1 becomes INVERSE(INVERSE(x)).
     TreeNode* term()
     {
         TreeNode* tree = atom();
@@ -287,9 +278,7 @@ struct Parser
         return tree;
     }
 
-    // -------------------------------------------------------------------------
     // atom -> '(' expr ')' | 'e' | VAR
-    // -------------------------------------------------------------------------
     TreeNode* atom()
     {
         if (current.type == LPAREN)
@@ -316,12 +305,9 @@ struct Parser
 
         fprintf(stderr, "Parse error: expected atom (variable, 'e', or '(').\n");
         exit(1);
-        return 0;    // unreachable; silences compiler warning
+        return 0;
     }
 
-    // -------------------------------------------------------------------------
-    // Entry point: parse a complete expression and return its tree.
-    // -------------------------------------------------------------------------
     TreeNode* parse()
     {
         TreeNode* tree = expr();
@@ -334,7 +320,183 @@ struct Parser
 };
 
 // =============================================================================
-// Run a single test case: print input, then print parse tree.
+// sameVar
+// Returns true when two nodes represent the same atomic group element.
+// Used by simplify() to check whether cancellation rules apply.
+// =============================================================================
+
+bool sameVar(TreeNode* a, TreeNode* b)
+{
+    if (!a || !b) return false;
+    if (a->kind == IDENTITY_NODE && b->kind == IDENTITY_NODE) return true;
+    if (a->kind == VAR_NODE      && b->kind == VAR_NODE)
+        return a->var_name == b->var_name;
+    return false;
+}
+
+// =============================================================================
+// simplify
+//
+// Applies the ten group reduction rules bottom-up (children before parent).
+// Rules that produce a new subtree call simplify() recursively so that
+// any newly exposed redexes are also reduced.
+// Every discarded subtree is freed to avoid memory leaks.
+// =============================================================================
+
+TreeNode* simplify(TreeNode* node)
+{
+    if (!node) return node;
+
+    for (int i = 0; i < MAX_CHILDREN; i++)
+        node->child[i] = simplify(node->child[i]);
+
+    // x^-1^-1 -> x
+    if (node->kind == INVERSE_NODE &&
+        node->child[0]->kind == INVERSE_NODE)
+    {
+        TreeNode* result = node->child[0]->child[0];
+        node->child[0]->child[0] = nullptr;
+        delete node->child[0];
+        delete node;
+        return result;
+    }
+
+    // e^-1 -> e
+    if (node->kind == INVERSE_NODE &&
+        node->child[0]->kind == IDENTITY_NODE)
+    {
+        destroyTree(node->child[0]);
+        node->child[0] = nullptr;
+        delete node;
+        return new TreeNode(IDENTITY_NODE);
+    }
+
+    // (x.y)^-1 -> y^-1.x^-1
+    // Detach children before freeing shells so they are not accidentally freed.
+    if (node->kind == INVERSE_NODE &&
+        node->child[0]->kind == PRODUCT_NODE)
+    {
+        TreeNode* A = node->child[0]->child[0];
+        TreeNode* B = node->child[0]->child[1];
+
+        node->child[0]->child[0] = nullptr;
+        node->child[0]->child[1] = nullptr;
+        delete node->child[0];
+        delete node;
+
+        TreeNode* invB = new TreeNode(INVERSE_NODE);
+        invB->child[0] = B;
+
+        TreeNode* invA = new TreeNode(INVERSE_NODE);
+        invA->child[0] = A;
+
+        TreeNode* newProd = new TreeNode(PRODUCT_NODE);
+        newProd->child[0] = invB;
+        newProd->child[1] = invA;
+
+        return simplify(newProd);
+    }
+
+    // e.x -> x
+    if (node->kind == PRODUCT_NODE &&
+        node->child[0]->kind == IDENTITY_NODE)
+    {
+        TreeNode* result = node->child[1];
+        destroyTree(node->child[0]);
+        node->child[0] = nullptr;
+        node->child[1] = nullptr;
+        delete node;
+        return result;
+    }
+
+    // x.e -> x
+    if (node->kind == PRODUCT_NODE &&
+        node->child[1]->kind == IDENTITY_NODE)
+    {
+        TreeNode* result = node->child[0];
+        destroyTree(node->child[1]);
+        node->child[0] = nullptr;
+        node->child[1] = nullptr;
+        delete node;
+        return result;
+    }
+
+    // x.x^-1 -> e
+    if (node->kind == PRODUCT_NODE &&
+        node->child[1]->kind == INVERSE_NODE &&
+        sameVar(node->child[0], node->child[1]->child[0]))
+    {
+        destroyTree(node->child[0]);
+        destroyTree(node->child[1]);
+        node->child[0] = nullptr;
+        node->child[1] = nullptr;
+        delete node;
+        return new TreeNode(IDENTITY_NODE);
+    }
+
+    // x^-1.x -> e
+    if (node->kind == PRODUCT_NODE &&
+        node->child[0]->kind == INVERSE_NODE &&
+        sameVar(node->child[0]->child[0], node->child[1]))
+    {
+        destroyTree(node->child[0]);
+        destroyTree(node->child[1]);
+        node->child[0] = nullptr;
+        node->child[1] = nullptr;
+        delete node;
+        return new TreeNode(IDENTITY_NODE);
+    }
+
+    // y^-1.(y.z) -> z
+    if (node->kind == PRODUCT_NODE &&
+        node->child[0]->kind == INVERSE_NODE &&
+        node->child[1]->kind == PRODUCT_NODE &&
+        sameVar(node->child[0]->child[0], node->child[1]->child[0]))
+    {
+        TreeNode* result = node->child[1]->child[1];
+
+        node->child[1]->child[1] = nullptr;
+
+        destroyTree(node->child[0]);
+        destroyTree(node->child[1]->child[0]);
+        delete node->child[1];
+        node->child[0] = nullptr;
+        node->child[1] = nullptr;
+        delete node;
+
+        return simplify(result);
+    }
+
+    // y.(y^-1.z) -> z
+    if (node->kind == PRODUCT_NODE &&
+        node->child[1]->kind == PRODUCT_NODE &&
+        node->child[1]->child[0]->kind == INVERSE_NODE &&
+        sameVar(node->child[0], node->child[1]->child[0]->child[0]))
+    {
+        TreeNode* result = node->child[1]->child[1];
+
+        node->child[1]->child[1] = nullptr;
+
+        destroyTree(node->child[1]->child[0]);
+        destroyTree(node->child[0]);
+        delete node->child[1];
+        node->child[0] = nullptr;
+        node->child[1] = nullptr;
+        delete node;
+
+        return simplify(result);
+    }
+
+    return node;
+}
+
+// =============================================================================
+// printExpression
+//
+// Prints the simplified tree as a readable infix expression.
+// Because '.' is left-associative, the left child of any PRODUCT node is
+// never parenthesised. The right child is parenthesised only when it is
+// itself a PRODUCT, to distinguish x.(y.z) from the default x.y.z grouping.
 // =============================================================================
 
 void printExpression(TreeNode* node)
@@ -352,7 +514,6 @@ void printExpression(TreeNode* node)
             break;
 
         case INVERSE_NODE:
-            // print child then ^-1
             if (node->child[0]->kind == PRODUCT_NODE)
             {
                 printf("(");
@@ -367,20 +528,8 @@ void printExpression(TreeNode* node)
             break;
 
         case PRODUCT_NODE:
-            // left . right
-            if (node->child[0]->kind == PRODUCT_NODE)
-            {
-                printf("(");
-                printExpression(node->child[0]);
-                printf(")");
-            }
-            else
-            {
-                printExpression(node->child[0]);
-            }
-
+            printExpression(node->child[0]);
             printf(".");
-
             if (node->child[1]->kind == PRODUCT_NODE)
             {
                 printf("(");
@@ -395,104 +544,9 @@ void printExpression(TreeNode* node)
     }
 }
 
-TreeNode* simplify(TreeNode* node)
-{
-    if (!node) return node;
-
-    // simplify children first (post-order)
-    for (int i = 0; i < MAX_CHILDREN; i++)
-        node->child[i] = simplify(node->child[i]);
-
-    // ---- RULES ----
-
-    // x^-1^-1 → x
-    if (node->kind == INVERSE_NODE &&
-        node->child[0]->kind == INVERSE_NODE)
-    {
-        TreeNode* result = node->child[0]->child[0];
-        node->child[0]->child[0] = nullptr;
-        delete node->child[0];
-        delete node;
-        return result;
-    }
-
-    // e^-1 → e
-    if (node->kind == INVERSE_NODE &&
-        node->child[0]->kind == IDENTITY_NODE)
-    {
-        delete node;
-        return new TreeNode(IDENTITY_NODE);
-    }
-
-    // (x.y)^-1 → y^-1.x^-1
-    if (node->kind == INVERSE_NODE &&
-        node->child[0]->kind == PRODUCT_NODE)
-    {
-        TreeNode* A = node->child[0]->child[0];
-        TreeNode* B = node->child[0]->child[1];
-
-        TreeNode* leftInv = new TreeNode(INVERSE_NODE);
-        leftInv->child[0] = B;
-
-        TreeNode* rightInv = new TreeNode(INVERSE_NODE);
-        rightInv->child[0] = A;
-
-        TreeNode* newProd = new TreeNode(PRODUCT_NODE);
-        newProd->child[0] = leftInv;
-        newProd->child[1] = rightInv;
-
-        delete node->child[0];
-        delete node;
-
-        return simplify(newProd);
-    }
-
-    // e.x → x
-    if (node->kind == PRODUCT_NODE &&
-        node->child[0]->kind == IDENTITY_NODE)
-    {
-        TreeNode* result = node->child[1];
-        node->child[1] = nullptr;
-        delete node;
-        return result;
-    }
-
-    // x.e → x
-    if (node->kind == PRODUCT_NODE &&
-        node->child[1]->kind == IDENTITY_NODE)
-    {
-        TreeNode* result = node->child[0];
-        node->child[0] = nullptr;
-        delete node;
-        return result;
-    }
-
-    // x.x^-1 → e
-    if (node->kind == PRODUCT_NODE &&
-        node->child[1]->kind == INVERSE_NODE &&
-        node->child[1]->child[0]->kind == VAR_NODE &&
-        node->child[0]->kind == VAR_NODE &&
-        node->child[0]->var_name ==
-        node->child[1]->child[0]->var_name)
-    {
-        delete node;
-        return new TreeNode(IDENTITY_NODE);
-    }
-
-    // x^-1.x → e
-    if (node->kind == PRODUCT_NODE &&
-        node->child[0]->kind == INVERSE_NODE &&
-        node->child[0]->child[0]->kind == VAR_NODE &&
-        node->child[1]->kind == VAR_NODE &&
-        node->child[1]->var_name ==
-        node->child[0]->child[0]->var_name)
-    {
-        delete node;
-        return new TreeNode(IDENTITY_NODE);
-    }
-
-    return node;
-}
+// =============================================================================
+// runTest
+// =============================================================================
 
 void runTest(int num, const char* input)
 {
@@ -503,89 +557,41 @@ void runTest(int num, const char* input)
     Parser    p(input);
     TreeNode* tree = p.parse();
     printTree(tree, 0);
-    printf("\n");
 
     tree = simplify(tree);
-    printf("Simplified Expression: ");
+    printf("Simplified: ");
     printExpression(tree);
-    printf("\n");
+    printf("\n\n");
+
     destroyTree(tree);
 }
 
-// =============================================================================
-// Main — 25 test cases covering all reduction rules from pages 459-460.
-// Every case exercises a distinct grammar feature or combination thereof.
-// =============================================================================
-
 int main()
 {
+    if (!freopen("input.txt", "r", stdin))
+    {
+        fprintf(stderr, "Error: could not open input.txt\n");
+        return 1;
+    }
+    if (!freopen("output.txt", "w", stdout))
+    {
+        fprintf(stderr, "Error: could not open output.txt\n");
+        return 1;
+    }
 
-    runTest( 0, "((x.y^-1).z^-1^-1^-1^-1)^-1");
-    runTest( 0, "((x.y^-1).z)^-1");
-    // --- Basic identity rules (e.x -> x, x.e -> x) ---
-    runTest( 1, "e.x");
-    runTest( 2, "x.e");
+    char line[1024];
+    int  testNum = 1;
 
-    // --- Basic inverse rules (x^-1.x -> e, x.x^-1 -> e) ---
-    runTest( 3, "x^-1.x");
-    runTest( 4, "x.x^-1");
+    while (fgets(line, sizeof(line), stdin))
+    {
+        int len = (int)strlen(line);
+        while (len > 0 && (line[len - 1] == '\n' || line[len - 1] == '\r'))
+            line[--len] = '\0';
 
-    // --- Inverse of identity (e^-1 -> e) ---
-    runTest( 5, "e^-1");
+        if (len == 0) continue;
 
-    // --- Double inverse / involution (x^-1^-1 -> x) ---
-    runTest( 6, "x^-1^-1");
-
-    // --- Cancellation rules from page 460 ---
-    runTest( 7, "y^-1.(y.z)");
-    runTest( 8, "y.(y^-1.z)");
-
-    // --- Associativity: (x.y).z -> x.(y.z) ---
-    runTest( 9, "(x.y).z");
-    runTest(10, "x.(y.z)");
-
-    // --- Inverse of product: (x.y)^-1 -> y^-1.x^-1 ---
-    runTest(11, "(x.y)^-1");
-
-    // --- Page 460 worked example: left-hand side ---
-    runTest(12, "((x.y^-1).z)^-1");
-
-    // --- Page 460 worked example: right-hand side ---
-    runTest(13, "(z^-1.y).x^-1");
-
-    // --- Left-associativity of '.' over three and four operands ---
-    runTest(14, "x.y.z");
-    runTest(15, "a.b.c.d");
-
-    // --- Triple inverse (applied three times to the same atom) ---
-    runTest(16, "e^-1^-1^-1");
-
-    // --- Double inverse then product ---
-    runTest(17, "x^-1^-1.x");
-
-    // --- Right-nested products ---
-    runTest(18, "a.(b.(c.d))");
-
-    // --- Product of two bracketed sub-expressions with inverses ---
-    runTest(19, "(a.b^-1).(c^-1.d)");
-
-    // --- Double inverse of a grouped product ---
-    runTest(20, "((a.b).c)^-1^-1");
-
-    // --- Inverse of a product of inverses ---
-    runTest(21, "(x^-1.y^-1)^-1");
-
-    // --- Alternating products and inverses ---
-    runTest(22, "x.y^-1.z.w^-1");
-
-    // --- Compound expression derived from page 460 chain of reductions ---
-    runTest(23, "((x.y)^-1.(y.z)).z^-1");
-
-    // --- Identity-like compound: (x.y^-1)^-1 . (y.x^-1) ---
-    runTest(24, "(x.y^-1)^-1.(y.x^-1)");
-
-    // --- Chain of cancellations across three variable pairs ---
-    runTest(25, "(a^-1.b).(b^-1.c).(c^-1.a)");
+        runTest(testNum++, line);
+    }
 
     return 0;
 }

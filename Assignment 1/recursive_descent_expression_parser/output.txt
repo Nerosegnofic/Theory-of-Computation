@@ -1,0 +1,278 @@
+--------------------------------------------------
+Test  1: e.x
+Parse Tree:
+product
+|--e
+|--x
+Simplified: x
+
+--------------------------------------------------
+Test  2: x.e
+Parse Tree:
+product
+|--x
+|--e
+Simplified: x
+
+--------------------------------------------------
+Test  3: x^-1.x
+Parse Tree:
+product
+|--inverse
+   |--x
+|--x
+Simplified: e
+
+--------------------------------------------------
+Test  4: x.x^-1
+Parse Tree:
+product
+|--x
+|--inverse
+   |--x
+Simplified: e
+
+--------------------------------------------------
+Test  5: e^-1
+Parse Tree:
+inverse
+|--e
+Simplified: e
+
+--------------------------------------------------
+Test  6: x^-1^-1
+Parse Tree:
+inverse
+|--inverse
+   |--x
+Simplified: x
+
+--------------------------------------------------
+Test  7: y^-1.(y.z)
+Parse Tree:
+product
+|--inverse
+   |--y
+|--product
+   |--y
+   |--z
+Simplified: z
+
+--------------------------------------------------
+Test  8: y.(y^-1.z)
+Parse Tree:
+product
+|--y
+|--product
+   |--inverse
+      |--y
+   |--z
+Simplified: z
+
+--------------------------------------------------
+Test  9: (x.y).z
+Parse Tree:
+product
+|--product
+   |--x
+   |--y
+|--z
+Simplified: x.y.z
+
+--------------------------------------------------
+Test 10: x.(y.z)
+Parse Tree:
+product
+|--x
+|--product
+   |--y
+   |--z
+Simplified: x.(y.z)
+
+--------------------------------------------------
+Test 11: (x.y)^-1
+Parse Tree:
+inverse
+|--product
+   |--x
+   |--y
+Simplified: y^-1.x^-1
+
+--------------------------------------------------
+Test 12: ((x.y^-1).z)^-1
+Parse Tree:
+inverse
+|--product
+   |--product
+      |--x
+      |--inverse
+         |--y
+   |--z
+Simplified: z^-1.(y.x^-1)
+
+--------------------------------------------------
+Test 13: (z^-1.y).x^-1
+Parse Tree:
+product
+|--product
+   |--inverse
+      |--z
+   |--y
+|--inverse
+   |--x
+Simplified: z^-1.y.x^-1
+
+--------------------------------------------------
+Test 14: x.y.z
+Parse Tree:
+product
+|--product
+   |--x
+   |--y
+|--z
+Simplified: x.y.z
+
+--------------------------------------------------
+Test 15: a.b.c.d
+Parse Tree:
+product
+|--product
+   |--product
+      |--a
+      |--b
+   |--c
+|--d
+Simplified: a.b.c.d
+
+--------------------------------------------------
+Test 16: e^-1^-1^-1
+Parse Tree:
+inverse
+|--inverse
+   |--inverse
+      |--e
+Simplified: e
+
+--------------------------------------------------
+Test 17: x^-1^-1.x
+Parse Tree:
+product
+|--inverse
+   |--inverse
+      |--x
+|--x
+Simplified: x.x
+
+--------------------------------------------------
+Test 18: a.(b.(c.d))
+Parse Tree:
+product
+|--a
+|--product
+   |--b
+   |--product
+      |--c
+      |--d
+Simplified: a.(b.(c.d))
+
+--------------------------------------------------
+Test 19: (a.b^-1).(c^-1.d)
+Parse Tree:
+product
+|--product
+   |--a
+   |--inverse
+      |--b
+|--product
+   |--inverse
+      |--c
+   |--d
+Simplified: a.b^-1.(c^-1.d)
+
+--------------------------------------------------
+Test 20: ((a.b).c)^-1^-1
+Parse Tree:
+inverse
+|--inverse
+   |--product
+      |--product
+         |--a
+         |--b
+      |--c
+Simplified: a.b.c
+
+--------------------------------------------------
+Test 21: (x^-1.y^-1)^-1
+Parse Tree:
+inverse
+|--product
+   |--inverse
+      |--x
+   |--inverse
+      |--y
+Simplified: y.x
+
+--------------------------------------------------
+Test 22: x.y^-1.z.w^-1
+Parse Tree:
+product
+|--product
+   |--product
+      |--x
+      |--inverse
+         |--y
+   |--z
+|--inverse
+   |--w
+Simplified: x.y^-1.z.w^-1
+
+--------------------------------------------------
+Test 23: ((x.y)^-1.(y.z)).z^-1
+Parse Tree:
+product
+|--product
+   |--inverse
+      |--product
+         |--x
+         |--y
+   |--product
+      |--y
+      |--z
+|--inverse
+   |--z
+Simplified: y^-1.x^-1.(y.z).z^-1
+
+--------------------------------------------------
+Test 24: (x.y^-1)^-1.(y.x^-1)
+Parse Tree:
+product
+|--inverse
+   |--product
+      |--x
+      |--inverse
+         |--y
+|--product
+   |--y
+   |--inverse
+      |--x
+Simplified: y.x^-1.(y.x^-1)
+
+--------------------------------------------------
+Test 25: (a^-1.b).(b^-1.c).(c^-1.a)
+Parse Tree:
+product
+|--product
+   |--product
+      |--inverse
+         |--a
+      |--b
+   |--product
+      |--inverse
+         |--b
+      |--c
+|--product
+   |--inverse
+      |--c
+   |--a
+Simplified: a^-1.b.(b^-1.c).(c^-1.a)
+
