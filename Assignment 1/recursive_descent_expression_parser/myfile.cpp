@@ -24,18 +24,6 @@
  *   '.'   is left-associative:  x.y.z    parses as (x.y).z
  *   '^-1' is left-chained:      x^-1^-1  parses as (x^-1)^-1
  *
- * Reduction rules from pages 459-460:
- *   e.x         ->  x
- *   x.e         ->  x
- *   x^-1.x      ->  e
- *   x.x^-1      ->  e
- *   e^-1        ->  e
- *   x^-1^-1     ->  x
- *   y^-1.(y.z)  ->  z
- *   y.(y^-1.z)  ->  z
- *   (x.y).z     ->  x.(y.z)
- *   (x.y)^-1    ->  y^-1.x^-1
- *
  * Example:
  *   Input:  ((x.y^-1).z)^-1
  *   Output:
@@ -51,8 +39,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <iostream>
-using namespace std;
 
 // =============================================================================
 // Token
