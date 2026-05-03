@@ -420,8 +420,8 @@ TreeNode* tryR7(TreeNode* n)
     if (n->kind != PRODUCT_NODE) return 0;
     TreeNode* L = n->child[0];
     TreeNode* R = n->child[1];
-    if (L->kind != INVERSE_NODE)         return 0;
-    if (R->kind != PRODUCT_NODE)         return 0;
+    if (L->kind != INVERSE_NODE)               return 0;
+    if (R->kind != PRODUCT_NODE)               return 0;
     if (!treesEqual(L->child[0], R->child[0])) return 0;
 
     TreeNode* keep = R->child[1];
@@ -435,8 +435,8 @@ TreeNode* tryR8(TreeNode* n)
     if (n->kind != PRODUCT_NODE) return 0;
     TreeNode* L = n->child[0];
     TreeNode* R = n->child[1];
-    if (R->kind != PRODUCT_NODE)         return 0;
-    if (R->child[0]->kind != INVERSE_NODE) return 0;
+    if (R->kind != PRODUCT_NODE)               return 0;
+    if (R->child[0]->kind != INVERSE_NODE)     return 0;
     if (!treesEqual(R->child[0]->child[0], L)) return 0;
 
     TreeNode* keep = R->child[1];
@@ -514,36 +514,47 @@ TreeNode* reduceStep(TreeNode* n, bool* changed)
 }
 
 // =============================================================================
-// runTest  —  organised output
+// runTest  —  print initial tree, then each intermediate step
 // =============================================================================
 
 void runTest(int testNumber, const char* input)
 {
-    // ── Header ──────────────────────────────────────────────────────────────
+    // ── Header ───────────────────────────────────────────────────────────────
     printf("Test %d: %s\n", testNumber, input);
 
     // ── Parse ────────────────────────────────────────────────────────────────
     Parser    p(input);
     TreeNode* tree = p.parse();
 
-    // ── Initial parse tree ───────────────────────────────────────────────────
+    // ── Print initial parse tree (no expression yet) ─────────────────────────
     printf("\nParse tree:\n");
     printTree(tree, 0);
 
-    // ── Reduce fully (no intermediate output) ────────────────────────────────
+    // ── Apply one reduction at a time; print the tree and expression after ────
+    // ── each step that actually changes the tree.                          ────
+    printf("\nReduction steps:\n");
+
+    bool anyStep = false;
     while (true)
     {
         bool changed = false;
         tree = reduceStep(tree, &changed);
         if (!changed) break;
+
+        anyStep = true;
+        printf("\n");
+        printTree(tree, 0);
+        printExpr(tree);
+        printf("\n");
     }
 
-    // ── Fully-reduced tree + expression ──────────────────────────────────────
-    printf("\nReduced parse tree:\n");
-    printTree(tree, 0);
-    printf("Reduced expression: ");
-    printExpr(tree);
-    printf("\n");
+    if (!anyStep)
+    {
+        // Expression was already in normal form — still show it
+        printf("\n(already in normal form)\n");
+        printExpr(tree);
+        printf("\n");
+    }
 
     // ── Separator ────────────────────────────────────────────────────────────
     printf("==========================================\n");
