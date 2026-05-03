@@ -155,7 +155,6 @@ void destroyTree(TreeNode* node)
     delete node;
 }
 
-// Deep copy of a parse tree (used so reductions don't share subtrees).
 TreeNode* cloneTree(TreeNode* node)
 {
     if (!node) return 0;
@@ -166,7 +165,6 @@ TreeNode* cloneTree(TreeNode* node)
     return copy;
 }
 
-// Structural equality of two trees (needed for x^-1.x and x.x^-1 rules).
 bool treesEqual(TreeNode* a, TreeNode* b)
 {
     if (!a && !b) return true;
@@ -203,15 +201,6 @@ void printTree(TreeNode* node, int depth)
 
 // =============================================================================
 // printExpr
-//
-// Parenthesization policy (matches the textbook example output):
-//   - VAR_NODE / IDENTITY_NODE are atomic.
-//   - Inside an INVERSE_NODE: parenthesize the child unless it is atomic.
-//     So  inverse(x)         -> "x^-1"
-//         inverse(inverse(y))-> "(y^-1)^-1"
-//         inverse(product..) -> "(x.y)^-1"
-//   - Inside a PRODUCT_NODE: parenthesize a child if it is itself a PRODUCT.
-//     INVERSE children print without extra parens because '^-1' is postfix.
 // =============================================================================
 
 void printExpr(TreeNode* node)
@@ -349,14 +338,8 @@ struct Parser
 
 // =============================================================================
 // Reduction Rules
-//
-// Each rule tries to rewrite the *root* of the given subtree.  It returns the
-// new node on success (caller must use it instead of the old one) or 0 if the
-// rule does not apply.  The caller is responsible for freeing the discarded
-// pieces of the old tree (this is handled inside applyOnce / reduceStep).
 // =============================================================================
 
-// Helpers that build small trees.
 TreeNode* makeIdentity()             { return new TreeNode(IDENTITY_NODE); }
 TreeNode* makeInverse(TreeNode* c)
 {
@@ -372,7 +355,6 @@ TreeNode* makeProduct(TreeNode* a, TreeNode* b)
     return n;
 }
 
-// (R1) e.x -> x
 TreeNode* tryR1(TreeNode* n)
 {
     if (n->kind != PRODUCT_NODE) return 0;
@@ -383,7 +365,6 @@ TreeNode* tryR1(TreeNode* n)
     return keep;
 }
 
-// (R2) x.e -> x
 TreeNode* tryR2(TreeNode* n)
 {
     if (n->kind != PRODUCT_NODE) return 0;
@@ -394,7 +375,6 @@ TreeNode* tryR2(TreeNode* n)
     return keep;
 }
 
-// (R3) x^-1.x -> e
 TreeNode* tryR3(TreeNode* n)
 {
     if (n->kind != PRODUCT_NODE) return 0;
@@ -406,7 +386,6 @@ TreeNode* tryR3(TreeNode* n)
     return makeIdentity();
 }
 
-// (R4) x.x^-1 -> e
 TreeNode* tryR4(TreeNode* n)
 {
     if (n->kind != PRODUCT_NODE) return 0;
@@ -418,7 +397,6 @@ TreeNode* tryR4(TreeNode* n)
     return makeIdentity();
 }
 
-// (R5) e^-1 -> e
 TreeNode* tryR5(TreeNode* n)
 {
     if (n->kind != INVERSE_NODE) return 0;
@@ -427,7 +405,6 @@ TreeNode* tryR5(TreeNode* n)
     return makeIdentity();
 }
 
-// (R6) (x^-1)^-1 -> x
 TreeNode* tryR6(TreeNode* n)
 {
     if (n->kind != INVERSE_NODE) return 0;
@@ -438,7 +415,6 @@ TreeNode* tryR6(TreeNode* n)
     return keep;
 }
 
-// (R7) y^-1.(y.z) -> z
 TreeNode* tryR7(TreeNode* n)
 {
     if (n->kind != PRODUCT_NODE) return 0;
@@ -454,7 +430,6 @@ TreeNode* tryR7(TreeNode* n)
     return keep;
 }
 
-// (R8) y.(y^-1.z) -> z
 TreeNode* tryR8(TreeNode* n)
 {
     if (n->kind != PRODUCT_NODE) return 0;
@@ -470,7 +445,6 @@ TreeNode* tryR8(TreeNode* n)
     return keep;
 }
 
-// (R9) (x.y).z -> x.(y.z)
 TreeNode* tryR9(TreeNode* n)
 {
     if (n->kind != PRODUCT_NODE) return 0;
@@ -488,7 +462,6 @@ TreeNode* tryR9(TreeNode* n)
     return makeProduct(x, makeProduct(y, z));
 }
 
-// (R10) (x.y)^-1 -> y^-1.x^-1
 TreeNode* tryR10(TreeNode* n)
 {
     if (n->kind != INVERSE_NODE) return 0;
@@ -505,8 +478,6 @@ TreeNode* tryR10(TreeNode* n)
     return makeProduct(makeInverse(y), makeInverse(x));
 }
 
-// Try every rule at this node, in the order listed on page 460.
-// Returns a new node (replacing 'n') on success, or 0 if none applied.
 TreeNode* tryAllRulesAtRoot(TreeNode* n)
 {
     TreeNode* r;
@@ -523,14 +494,10 @@ TreeNode* tryAllRulesAtRoot(TreeNode* n)
     return 0;
 }
 
-// Perform one leftmost-outermost reduction step anywhere in the tree.
-// Returns the new (sub)tree on success and sets *changed = true.
-// If no rule applies in the whole subtree, returns 'n' unchanged.
 TreeNode* reduceStep(TreeNode* n, bool* changed)
 {
     if (!n || *changed) return n;
 
-    // Outermost first: try at the current root.
     TreeNode* r = tryAllRulesAtRoot(n);
     if (r)
     {
@@ -538,7 +505,6 @@ TreeNode* reduceStep(TreeNode* n, bool* changed)
         return r;
     }
 
-    // Otherwise descend left-to-right.
     for (int i = 0; i < MAX_CHILDREN && !*changed; ++i)
     {
         if (n->child[i])
@@ -548,31 +514,46 @@ TreeNode* reduceStep(TreeNode* n, bool* changed)
 }
 
 // =============================================================================
-// runTest
+// runTest  —  organised output
 // =============================================================================
 
-void runTest(const char* input)
+void runTest(int testNumber, const char* input)
 {
+    // ── Header ──────────────────────────────────────────────────────────────
+    printf("Test %d: %s\n", testNumber, input);
+
+    // ── Parse ────────────────────────────────────────────────────────────────
     Parser    p(input);
     TreeNode* tree = p.parse();
 
-    // Print the initial parse tree only (no expression for the original input).
+    // ── Initial parse tree ───────────────────────────────────────────────────
+    printf("\nParse tree:\n");
     printTree(tree, 0);
 
-    // Repeatedly apply one reduction step until none applies.
+    // ── Reduce fully (no intermediate output) ────────────────────────────────
     while (true)
     {
         bool changed = false;
         tree = reduceStep(tree, &changed);
         if (!changed) break;
-
-        printTree(tree, 0);
-        printExpr(tree);
-        printf("\n");
     }
+
+    // ── Fully-reduced tree + expression ──────────────────────────────────────
+    printf("\nReduced parse tree:\n");
+    printTree(tree, 0);
+    printf("Reduced expression: ");
+    printExpr(tree);
+    printf("\n");
+
+    // ── Separator ────────────────────────────────────────────────────────────
+    printf("==========================================\n");
 
     destroyTree(tree);
 }
+
+// =============================================================================
+// main
+// =============================================================================
 
 int main()
 {
@@ -588,6 +569,7 @@ int main()
     }
 
     char line[1024];
+    int  testNumber = 1;
 
     while (fgets(line, sizeof(line), stdin))
     {
@@ -597,7 +579,7 @@ int main()
 
         if (len == 0) continue;
 
-        runTest(line);
+        runTest(testNumber++, line);
     }
 
     return 0;
