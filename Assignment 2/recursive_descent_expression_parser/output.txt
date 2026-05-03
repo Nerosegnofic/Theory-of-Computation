@@ -1,38 +1,102 @@
+Test 1: a
+
+Parse tree:
 a
+
+Reduced parse tree:
+a
+Reduced expression: a
+==========================================
+Test 2: a^-1
+
+Parse tree:
 inverse
 |--a
+
+Reduced parse tree:
+inverse
+|--a
+Reduced expression: a^-1
+==========================================
+Test 3: a.b
+
+Parse tree:
 product
 |--a
 |--b
+
+Reduced parse tree:
+product
+|--a
+|--b
+Reduced expression: a.b
+==========================================
+Test 4: a.b^-1
+
+Parse tree:
 product
 |--a
 |--inverse
    |--b
+
+Reduced parse tree:
+product
+|--a
+|--inverse
+   |--b
+Reduced expression: a.b^-1
+==========================================
+Test 5: a^-1.b
+
+Parse tree:
 product
 |--inverse
    |--a
 |--b
+
+Reduced parse tree:
+product
+|--inverse
+   |--a
+|--b
+Reduced expression: a^-1.b
+==========================================
+Test 6: a.b.c
+
+Parse tree:
 product
 |--product
    |--a
    |--b
 |--c
+
+Reduced parse tree:
 product
 |--a
 |--product
    |--b
    |--c
-a.(b.c)
+Reduced expression: a.(b.c)
+==========================================
+Test 7: (a.b)^-1
+
+Parse tree:
 inverse
 |--product
    |--a
    |--b
+
+Reduced parse tree:
 product
 |--inverse
    |--b
 |--inverse
    |--a
-b^-1.a^-1
+Reduced expression: b^-1.a^-1
+==========================================
+Test 8: ((x.y^-1).z)^-1
+
+Parse tree:
 inverse
 |--product
    |--product
@@ -40,25 +104,8 @@ inverse
       |--inverse
          |--y
    |--z
-product
-|--inverse
-   |--z
-|--inverse
-   |--product
-      |--x
-      |--inverse
-         |--y
-z^-1.(x.y^-1)^-1
-product
-|--inverse
-   |--z
-|--product
-   |--inverse
-      |--inverse
-         |--y
-   |--inverse
-      |--x
-z^-1.((y^-1)^-1.x^-1)
+
+Reduced parse tree:
 product
 |--inverse
    |--z
@@ -66,17 +113,33 @@ product
    |--y
    |--inverse
       |--x
-z^-1.(y.x^-1)
+Reduced expression: z^-1.(y.x^-1)
+==========================================
+Test 9: a^-1^-1
+
+Parse tree:
 inverse
 |--inverse
    |--a
+
+Reduced parse tree:
 a
-a
+Reduced expression: a
+==========================================
+Test 10: ((a^-1))^-1
+
+Parse tree:
 inverse
 |--inverse
    |--a
+
+Reduced parse tree:
 a
-a
+Reduced expression: a
+==========================================
+Test 11: a^-1.b^-1.c^-1
+
+Parse tree:
 product
 |--product
    |--inverse
@@ -85,6 +148,8 @@ product
       |--b
 |--inverse
    |--c
+
+Reduced parse tree:
 product
 |--inverse
    |--a
@@ -93,21 +158,19 @@ product
       |--b
    |--inverse
       |--c
-a^-1.(b^-1.c^-1)
+Reduced expression: a^-1.(b^-1.c^-1)
+==========================================
+Test 12: (a.b.c)^-1
+
+Parse tree:
 inverse
 |--product
    |--product
       |--a
       |--b
    |--c
-product
-|--inverse
-   |--c
-|--inverse
-   |--product
-      |--a
-      |--b
-c^-1.(a.b)^-1
+
+Reduced parse tree:
 product
 |--inverse
    |--c
@@ -116,7 +179,11 @@ product
       |--b
    |--inverse
       |--a
-c^-1.(b^-1.a^-1)
+Reduced expression: c^-1.(b^-1.a^-1)
+==========================================
+Test 13: (a.b^-1.c)^-1
+
+Parse tree:
 inverse
 |--product
    |--product
@@ -124,25 +191,8 @@ inverse
       |--inverse
          |--b
    |--c
-product
-|--inverse
-   |--c
-|--inverse
-   |--product
-      |--a
-      |--inverse
-         |--b
-c^-1.(a.b^-1)^-1
-product
-|--inverse
-   |--c
-|--product
-   |--inverse
-      |--inverse
-         |--b
-   |--inverse
-      |--a
-c^-1.((b^-1)^-1.a^-1)
+
+Reduced parse tree:
 product
 |--inverse
    |--c
@@ -150,7 +200,11 @@ product
    |--b
    |--inverse
       |--a
-c^-1.(b.a^-1)
+Reduced expression: c^-1.(b.a^-1)
+==========================================
+Test 14: (a.b).(c.d)
+
+Parse tree:
 product
 |--product
    |--a
@@ -158,6 +212,8 @@ product
 |--product
    |--c
    |--d
+
+Reduced parse tree:
 product
 |--a
 |--product
@@ -165,7 +221,11 @@ product
    |--product
       |--c
       |--d
-a.(b.(c.d))
+Reduced expression: a.(b.(c.d))
+==========================================
+Test 15: ((a.b).(c.d))^-1
+
+Parse tree:
 inverse
 |--product
    |--product
@@ -174,38 +234,8 @@ inverse
    |--product
       |--c
       |--d
-product
-|--inverse
-   |--product
-      |--c
-      |--d
-|--inverse
-   |--product
-      |--a
-      |--b
-(c.d)^-1.(a.b)^-1
-product
-|--product
-   |--inverse
-      |--d
-   |--inverse
-      |--c
-|--inverse
-   |--product
-      |--a
-      |--b
-(d^-1.c^-1).(a.b)^-1
-product
-|--inverse
-   |--d
-|--product
-   |--inverse
-      |--c
-   |--inverse
-      |--product
-         |--a
-         |--b
-d^-1.(c^-1.(a.b)^-1)
+
+Reduced parse tree:
 product
 |--inverse
    |--d
@@ -217,8 +247,20 @@ product
          |--b
       |--inverse
          |--a
-d^-1.(c^-1.(b^-1.a^-1))
+Reduced expression: d^-1.(c^-1.(b^-1.a^-1))
+==========================================
+Test 16: (((a)))
+
+Parse tree:
 a
+
+Reduced parse tree:
+a
+Reduced expression: a
+==========================================
+Test 17: (a.(b.c^-1)^-1).d
+
+Parse tree:
 product
 |--product
    |--a
@@ -228,38 +270,8 @@ product
          |--inverse
             |--c
 |--d
-product
-|--a
-|--product
-   |--inverse
-      |--product
-         |--b
-         |--inverse
-            |--c
-   |--d
-a.((b.c^-1)^-1.d)
-product
-|--a
-|--product
-   |--product
-      |--inverse
-         |--inverse
-            |--c
-      |--inverse
-         |--b
-   |--d
-a.(((c^-1)^-1.b^-1).d)
-product
-|--a
-|--product
-   |--inverse
-      |--inverse
-         |--c
-   |--product
-      |--inverse
-         |--b
-      |--d
-a.((c^-1)^-1.(b^-1.d))
+
+Reduced parse tree:
 product
 |--a
 |--product
@@ -268,7 +280,11 @@ product
       |--inverse
          |--b
       |--d
-a.(c.(b^-1.d))
+Reduced expression: a.(c.(b^-1.d))
+==========================================
+Test 18: ((a.b)^-1.(c.d)^-1)^-1
+
+Parse tree:
 inverse
 |--product
    |--inverse
@@ -279,38 +295,8 @@ inverse
       |--product
          |--c
          |--d
-product
-|--inverse
-   |--inverse
-      |--product
-         |--c
-         |--d
-|--inverse
-   |--inverse
-      |--product
-         |--a
-         |--b
-((c.d)^-1)^-1.((a.b)^-1)^-1
-product
-|--product
-   |--c
-   |--d
-|--inverse
-   |--inverse
-      |--product
-         |--a
-         |--b
-(c.d).((a.b)^-1)^-1
-product
-|--c
-|--product
-   |--d
-   |--inverse
-      |--inverse
-         |--product
-            |--a
-            |--b
-c.(d.((a.b)^-1)^-1)
+
+Reduced parse tree:
 product
 |--c
 |--product
@@ -318,7 +304,11 @@ product
    |--product
       |--a
       |--b
-c.(d.(a.b))
+Reduced expression: c.(d.(a.b))
+==========================================
+Test 19: a.b^-1.c.d^-1.e
+
+Parse tree:
 product
 |--product
    |--product
@@ -330,26 +320,8 @@ product
    |--inverse
       |--d
 |--e
-product
-|--product
-   |--product
-      |--a
-      |--inverse
-         |--b
-   |--c
-|--inverse
-   |--d
-((a.b^-1).c).d^-1
-product
-|--product
-   |--a
-   |--inverse
-      |--b
-|--product
-   |--c
-   |--inverse
-      |--d
-(a.b^-1).(c.d^-1)
+
+Reduced parse tree:
 product
 |--a
 |--product
@@ -359,7 +331,11 @@ product
       |--c
       |--inverse
          |--d
-a.(b^-1.(c.d^-1))
+Reduced expression: a.(b^-1.(c.d^-1))
+==========================================
+Test 20: (a^-1.b^-1)^-1.(c^-1.d^-1)^-1
+
+Parse tree:
 product
 |--inverse
    |--product
@@ -373,82 +349,8 @@ product
          |--c
       |--inverse
          |--d
-product
-|--product
-   |--inverse
-      |--inverse
-         |--b
-   |--inverse
-      |--inverse
-         |--a
-|--inverse
-   |--product
-      |--inverse
-         |--c
-      |--inverse
-         |--d
-((b^-1)^-1.(a^-1)^-1).(c^-1.d^-1)^-1
-product
-|--inverse
-   |--inverse
-      |--b
-|--product
-   |--inverse
-      |--inverse
-         |--a
-   |--inverse
-      |--product
-         |--inverse
-            |--c
-         |--inverse
-            |--d
-(b^-1)^-1.((a^-1)^-1.(c^-1.d^-1)^-1)
-product
-|--b
-|--product
-   |--inverse
-      |--inverse
-         |--a
-   |--inverse
-      |--product
-         |--inverse
-            |--c
-         |--inverse
-            |--d
-b.((a^-1)^-1.(c^-1.d^-1)^-1)
-product
-|--b
-|--product
-   |--a
-   |--inverse
-      |--product
-         |--inverse
-            |--c
-         |--inverse
-            |--d
-b.(a.(c^-1.d^-1)^-1)
-product
-|--b
-|--product
-   |--a
-   |--product
-      |--inverse
-         |--inverse
-            |--d
-      |--inverse
-         |--inverse
-            |--c
-b.(a.((d^-1)^-1.(c^-1)^-1))
-product
-|--b
-|--product
-   |--a
-   |--product
-      |--d
-      |--inverse
-         |--inverse
-            |--c
-b.(a.(d.(c^-1)^-1))
+
+Reduced parse tree:
 product
 |--b
 |--product
@@ -456,23 +358,39 @@ product
    |--product
       |--d
       |--c
-b.(a.(d.c))
+Reduced expression: b.(a.(d.c))
+==========================================
+Test 21: a^-1^-1^-1
+
+Parse tree:
 inverse
 |--inverse
    |--inverse
       |--a
+
+Reduced parse tree:
 inverse
 |--a
-a^-1
+Reduced expression: a^-1
+==========================================
+Test 22: ((a.b)^-1)^-1
+
+Parse tree:
 inverse
 |--inverse
    |--product
       |--a
       |--b
+
+Reduced parse tree:
 product
 |--a
 |--b
-a.b
+Reduced expression: a.b
+==========================================
+Test 23: a.b.c.d.e
+
+Parse tree:
 product
 |--product
    |--product
@@ -482,22 +400,8 @@ product
       |--c
    |--d
 |--e
-product
-|--product
-   |--product
-      |--a
-      |--b
-   |--c
-|--d
-((a.b).c).d
-product
-|--product
-   |--a
-   |--b
-|--product
-   |--c
-   |--d
-(a.b).(c.d)
+
+Reduced parse tree:
 product
 |--a
 |--product
@@ -505,7 +409,11 @@ product
    |--product
       |--c
       |--d
-a.(b.(c.d))
+Reduced expression: a.(b.(c.d))
+==========================================
+Test 24: (a.b^-1.c^-1)^-1.(d.e)
+
+Parse tree:
 product
 |--inverse
    |--product
@@ -518,83 +426,8 @@ product
 |--product
    |--d
    |--e
-product
-|--product
-   |--inverse
-      |--inverse
-         |--c
-   |--inverse
-      |--product
-         |--a
-         |--inverse
-            |--b
-|--product
-   |--d
-   |--e
-((c^-1)^-1.(a.b^-1)^-1).(d.e)
-product
-|--inverse
-   |--inverse
-      |--c
-|--product
-   |--inverse
-      |--product
-         |--a
-         |--inverse
-            |--b
-   |--product
-      |--d
-      |--e
-(c^-1)^-1.((a.b^-1)^-1.(d.e))
-product
-|--c
-|--product
-   |--inverse
-      |--product
-         |--a
-         |--inverse
-            |--b
-   |--product
-      |--d
-      |--e
-c.((a.b^-1)^-1.(d.e))
-product
-|--c
-|--product
-   |--product
-      |--inverse
-         |--inverse
-            |--b
-      |--inverse
-         |--a
-   |--product
-      |--d
-      |--e
-c.(((b^-1)^-1.a^-1).(d.e))
-product
-|--c
-|--product
-   |--inverse
-      |--inverse
-         |--b
-   |--product
-      |--inverse
-         |--a
-      |--product
-         |--d
-         |--e
-c.((b^-1)^-1.(a^-1.(d.e)))
-product
-|--c
-|--product
-   |--b
-   |--product
-      |--inverse
-         |--a
-      |--product
-         |--d
-         |--e
-c.(b.(a^-1.(d.e)))
+
+Reduced parse tree:
 product
 |--c
 |--product
@@ -603,7 +436,11 @@ product
       |--inverse
          |--a
       |--d
-c.(b.(a^-1.d))
+Reduced expression: c.(b.(a^-1.d))
+==========================================
+Test 25: x^-1.y.z^-1
+
+Parse tree:
 product
 |--product
    |--inverse
@@ -611,6 +448,8 @@ product
    |--y
 |--inverse
    |--z
+
+Reduced parse tree:
 product
 |--inverse
    |--x
@@ -618,14 +457,24 @@ product
    |--y
    |--inverse
       |--z
-x^-1.(y.z^-1)
+Reduced expression: x^-1.(y.z^-1)
+==========================================
+Test 26: ((a^-1)^-1)^-1
+
+Parse tree:
 inverse
 |--inverse
    |--inverse
       |--a
+
+Reduced parse tree:
 inverse
 |--a
-a^-1
+Reduced expression: a^-1
+==========================================
+Test 27: (a.(b.(c.d)^-1)^-1)^-1
+
+Parse tree:
 inverse
 |--product
    |--a
@@ -636,49 +485,8 @@ inverse
             |--product
                |--c
                |--d
-product
-|--inverse
-   |--inverse
-      |--product
-         |--b
-         |--inverse
-            |--product
-               |--c
-               |--d
-|--inverse
-   |--a
-((b.(c.d)^-1)^-1)^-1.a^-1
-product
-|--product
-   |--b
-   |--inverse
-      |--product
-         |--c
-         |--d
-|--inverse
-   |--a
-(b.(c.d)^-1).a^-1
-product
-|--b
-|--product
-   |--inverse
-      |--product
-         |--c
-         |--d
-   |--inverse
-      |--a
-b.((c.d)^-1.a^-1)
-product
-|--b
-|--product
-   |--product
-      |--inverse
-         |--d
-      |--inverse
-         |--c
-   |--inverse
-      |--a
-b.((d^-1.c^-1).a^-1)
+
+Reduced parse tree:
 product
 |--b
 |--product
@@ -689,7 +497,11 @@ product
          |--c
       |--inverse
          |--a
-b.(d^-1.(c^-1.a^-1))
+Reduced expression: b.(d^-1.(c^-1.a^-1))
+==========================================
+Test 28: (a.b).(c.d).(e.f).(g.h).(i.j)
+
+Parse tree:
 product
 |--product
    |--product
@@ -709,144 +521,8 @@ product
 |--product
    |--i
    |--j
-product
-|--product
-   |--product
-      |--product
-         |--a
-         |--b
-      |--product
-         |--c
-         |--d
-   |--product
-      |--e
-      |--f
-|--product
-   |--product
-      |--g
-      |--h
-   |--product
-      |--i
-      |--j
-(((a.b).(c.d)).(e.f)).((g.h).(i.j))
-product
-|--product
-   |--product
-      |--a
-      |--b
-   |--product
-      |--c
-      |--d
-|--product
-   |--product
-      |--e
-      |--f
-   |--product
-      |--product
-         |--g
-         |--h
-      |--product
-         |--i
-         |--j
-((a.b).(c.d)).((e.f).((g.h).(i.j)))
-product
-|--product
-   |--a
-   |--b
-|--product
-   |--product
-      |--c
-      |--d
-   |--product
-      |--product
-         |--e
-         |--f
-      |--product
-         |--product
-            |--g
-            |--h
-         |--product
-            |--i
-            |--j
-(a.b).((c.d).((e.f).((g.h).(i.j))))
-product
-|--a
-|--product
-   |--b
-   |--product
-      |--product
-         |--c
-         |--d
-      |--product
-         |--product
-            |--e
-            |--f
-         |--product
-            |--product
-               |--g
-               |--h
-            |--product
-               |--i
-               |--j
-a.(b.((c.d).((e.f).((g.h).(i.j)))))
-product
-|--a
-|--product
-   |--b
-   |--product
-      |--c
-      |--product
-         |--d
-         |--product
-            |--product
-               |--e
-               |--f
-            |--product
-               |--product
-                  |--g
-                  |--h
-               |--product
-                  |--i
-                  |--j
-a.(b.(c.(d.((e.f).((g.h).(i.j))))))
-product
-|--a
-|--product
-   |--b
-   |--product
-      |--c
-      |--product
-         |--d
-         |--product
-            |--e
-            |--product
-               |--f
-               |--product
-                  |--product
-                     |--g
-                     |--h
-                  |--product
-                     |--i
-                     |--j
-a.(b.(c.(d.(e.(f.((g.h).(i.j)))))))
-product
-|--a
-|--product
-   |--b
-   |--product
-      |--c
-      |--product
-         |--d
-         |--product
-            |--f
-            |--product
-               |--product
-                  |--g
-                  |--h
-               |--product
-                  |--i
-                  |--j
-a.(b.(c.(d.(f.((g.h).(i.j))))))
+
+Reduced parse tree:
 product
 |--a
 |--product
@@ -864,7 +540,11 @@ product
                   |--product
                      |--i
                      |--j
-a.(b.(c.(d.(f.(g.(h.(i.j)))))))
+Reduced expression: a.(b.(c.(d.(f.(g.(h.(i.j)))))))
+==========================================
+Test 29: ((a.b^-1)^-1.(c^-1.d)^-1)^-1
+
+Parse tree:
 inverse
 |--product
    |--inverse
@@ -877,44 +557,8 @@ inverse
          |--inverse
             |--c
          |--d
-product
-|--inverse
-   |--inverse
-      |--product
-         |--inverse
-            |--c
-         |--d
-|--inverse
-   |--inverse
-      |--product
-         |--a
-         |--inverse
-            |--b
-((c^-1.d)^-1)^-1.((a.b^-1)^-1)^-1
-product
-|--product
-   |--inverse
-      |--c
-   |--d
-|--inverse
-   |--inverse
-      |--product
-         |--a
-         |--inverse
-            |--b
-(c^-1.d).((a.b^-1)^-1)^-1
-product
-|--inverse
-   |--c
-|--product
-   |--d
-   |--inverse
-      |--inverse
-         |--product
-            |--a
-            |--inverse
-               |--b
-c^-1.(d.((a.b^-1)^-1)^-1)
+
+Reduced parse tree:
 product
 |--inverse
    |--c
@@ -924,7 +568,11 @@ product
       |--a
       |--inverse
          |--b
-c^-1.(d.(a.b^-1))
+Reduced expression: c^-1.(d.(a.b^-1))
+==========================================
+Test 30: ((a.b^-1).(c^-1.d))^-1^-1
+
+Parse tree:
 inverse
 |--inverse
    |--product
@@ -936,16 +584,8 @@ inverse
          |--inverse
             |--c
          |--d
-product
-|--product
-   |--a
-   |--inverse
-      |--b
-|--product
-   |--inverse
-      |--c
-   |--d
-(a.b^-1).(c^-1.d)
+
+Reduced parse tree:
 product
 |--a
 |--product
@@ -955,4 +595,5 @@ product
       |--inverse
          |--c
       |--d
-a.(b^-1.(c^-1.d))
+Reduced expression: a.(b^-1.(c^-1.d))
+==========================================
