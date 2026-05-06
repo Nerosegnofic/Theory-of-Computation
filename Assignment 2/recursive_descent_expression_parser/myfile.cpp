@@ -514,24 +514,24 @@ TreeNode* reduceStep(TreeNode* n, bool* changed)
 }
 
 // =============================================================================
-// runTest  —  print initial tree, then each intermediate step
+// runTest - print initial tree, then each intermediate step
 // =============================================================================
 
 void runTest(int testNumber, const char* input)
 {
-    // ── Header ───────────────────────────────────────────────────────────────
+    // Header
     printf("Test %d: %s\n", testNumber, input);
 
-    // ── Parse ────────────────────────────────────────────────────────────────
+    // Parse
     Parser    p(input);
     TreeNode* tree = p.parse();
 
-    // ── Print initial parse tree (no expression yet) ─────────────────────────
+    // Print initial parse tree (no expression yet)
     printf("\nParse tree:\n");
     printTree(tree, 0);
 
-    // ── Apply one reduction at a time; print the tree and expression after ────
-    // ── each step that actually changes the tree.                          ────
+    // Apply one reduction at a time; print the tree and expression after
+    // each step that actually changes the tree.
     printf("\nReduction steps:\n");
 
     bool anyStep = false;
@@ -550,13 +550,13 @@ void runTest(int testNumber, const char* input)
 
     if (!anyStep)
     {
-        // Expression was already in normal form — still show it
+        // Expression was already in normal form - still show it
         printf("\n(already in normal form)\n");
         printExpr(tree);
         printf("\n");
     }
 
-    // ── Separator ────────────────────────────────────────────────────────────
+    // Separator 
     printf("==========================================\n");
 
     destroyTree(tree);
